@@ -32,7 +32,7 @@
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
-            padding: 20px;
+            padding: 15px;
             display: flex;
             justify-content: center;
         }
@@ -42,7 +42,7 @@
             max-width: 900px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
         }
 
         .header-card {
@@ -54,7 +54,7 @@
         }
 
         .header-card h1 {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
@@ -68,7 +68,7 @@
             border: 1px solid rgba(37, 99, 235, 0.3);
             border-radius: 20px;
             padding: 6px 14px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             display: inline-block;
             margin-top: 5px;
         }
@@ -80,10 +80,12 @@
             padding: 12px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
+            width: 100%;
         }
 
         .search-bar input {
             flex: 1;
+            width: 100%;
             background: #0b0e14;
             border: 1px solid var(--border-color);
             padding: 12px 16px;
@@ -108,6 +110,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.2s ease;
+            white-space: nowrap;
         }
 
         .search-bar button:hover {
@@ -187,7 +190,16 @@
             padding: 10px 0;
         }
 
+        /* Responsive Mobile Layout Fixes */
         @media (max-width: 600px) {
+            .search-bar {
+                flex-direction: column;
+            }
+            
+            .search-bar button {
+                width: 100%;
+            }
+
             .metrics-grid {
                 grid-template-columns: 1fr 1fr;
             }
@@ -257,7 +269,6 @@
         const psxEndpoint = `https://dps.psx.com.pk/timeseries/intraday/${symbol}`;
 
         try {
-            // Attempt 1: Fetch via Primary Proxy
             const primaryProxy = `https://corsproxy.io/?${encodeURIComponent(psxEndpoint)}`;
             const response = await fetch(primaryProxy);
             if (!response.ok) throw new Error("Primary proxy blocked");
@@ -275,7 +286,6 @@
         } catch (err1) {
             console.warn("Primary CORS fetch failed. Trying fallback proxy...", err1);
             try {
-                // Attempt 2: Backup Proxy (AllOrigins)
                 const secondaryProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(psxEndpoint)}`;
                 const response2 = await fetch(secondaryProxy);
                 const data2 = await response2.json();
@@ -301,7 +311,6 @@
     }
 
     function generateRealisticFallback(symbol) {
-        // Accurately maps realistic market price levels for PSX stocks when proxies are offline
         let basePrice = 100.0;
         if (symbol === 'LUCK') basePrice = 440.0;
         else if (symbol === 'OGDC') basePrice = 325.0;
@@ -349,7 +358,6 @@
 
         const alertBox = document.getElementById('diagnosticAlert');
 
-        // Dynamic thresholding based on individual equity price bands
         const volumeThreshold = latestPrice > 200 ? 250000 : 1000000;
 
         if (vsr > volumeThreshold && spread < (latestPrice * 0.012)) {
@@ -389,10 +397,8 @@
         Plotly.newPlot('footprintChart', [trace], layout, {responsive: true});
     }
 
-    // Run automatically on initial load
     window.onload = analyzeStock;
 </script>
 
 </body>
-                                                  </html>
-    
+</html>
