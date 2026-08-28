@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Institutional Footprint Portal | PSX Analytics</title>
     
-    <!-- Plotly.js for high-performance footprint charts -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     
     <style>
@@ -56,10 +55,6 @@
         .header-card h1 {
             font-size: 1.5rem;
             margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
         }
 
         .header-card .author-tag {
@@ -207,19 +202,19 @@
 
 <div class="container">
     <div class="header-card">
-        <h1>🛡️ Institutional Footprint Portal</h1>
+        <h1>🛡️ PSX Institutional Footprint</h1>
         <div class="author-tag">
             Portal Made by Muhammad Usman Saleem | 0316-8232737
         </div>
     </div>
 
     <div class="search-bar">
-        <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g. LUCK, PRL, OGDC, CNERGY)" value="PRL" onkeydown="if(event.key==='Enter') analyzeStock()">
+        <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g. PRL, LUCK, OGDC)" value="PRL" onkeydown="if(event.key==='Enter') analyzeStock()">
         <button onclick="analyzeStock()">Analyze</button>
     </div>
 
     <div id="diagnosticAlert" class="alert-box alert-info">
-        <strong>Status:</strong> Ready to analyze PSX institutional order flow.
+        <strong>Status:</strong> Initializing connection to PSX Data Engine...
     </div>
 
     <div class="metrics-grid">
@@ -250,7 +245,7 @@
     </div>
 
     <footer>
-        © PSX Institutional Footprint Portal | Developed for Proprietary Analysis
+        © PSX Institutional Footprint Portal | Proprietary Order Flow Engine
     </footer>
 </div>
 
@@ -260,85 +255,73 @@
         const alertBox = document.getElementById('diagnosticAlert');
         
         alertBox.className = "alert-box alert-info";
-        alertBox.innerHTML = `<strong>Scanning Order Flow...</strong> Fetching live market data for <strong>${symbol}</strong>.`;
+        alertBox.innerHTML = `<strong>Fetching Live PSX Data...</strong> Connecting to backend servers for <strong>${symbol}</strong>.`;
 
         let rawTicks = [];
-        const psxEndpoint = `https://dps.psx.com.pk/timeseries/intraday/${symbol}`;
+        let isLive = false;
 
-        try {
-            // Proxy Attempt 1
-            const primaryProxy = `https://corsproxy.io/?${encodeURIComponent(psxEndpoint)}`;
-            const response = await fetch(primaryProxy);
-            if (!response.ok) throw new Error("Primary proxy blocked");
-            const json = await response.json();
+        // Array of proxies to try sequentially
+        const psxTarget = `https://dps.psx.com.pk/timeseries/intraday/${symbol}`;
+        const proxyUrls = [
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(psxTarget)}`,
+            `https://corsproxy.io/?${encodeURIComponent(psxTarget)}`,
+            `https://proxy.cors.sh/${psxTarget}`
+        ];
 
-            if (json && json.data && json.data.length > 0) {
-                rawTicks = json.data.map(item => ({
-                    time: new Date(item[0] * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    price: parseFloat(item[1]),
-                    volume: parseInt(item[2])
-                }));
-            } else {
-                throw new Error("No trade ticks found.");
-            }
-        } catch (err1) {
-            console.warn("Primary CORS fetch failed. Trying fallback proxy...", err1);
+        for (let url of proxyUrls) {
             try {
-                // Proxy Attempt 2
-                const secondaryProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(psxEndpoint)}`;
-                const response2 = await fetch(secondaryProxy);
-                const data2 = await response2.json();
-                const json2 = JSON.parse(data2.contents);
-
-                if (json2 && json2.data && json2.data.length > 0) {
-                    rawTicks = json2.data.map(item => ({
+                const res = await fetch(url);
+                if (!res.ok) continue;
+                const data = await res.json();
+                
+                if (data && data.data && data.data.length > 0) {
+                    rawTicks = data.data.map(item => ({
                         time: new Date(item[0] * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                         price: parseFloat(item[1]),
                         volume: parseInt(item[2])
                     }));
-                } else {
-                    throw new Error("Backup proxy failed.");
+                    isLive = true;
+                    break;
                 }
-            } catch (err2) {
-                console.warn("Live API fetch unavailable. Operating in Offline Fallback Mode:", err2);
-                alertBox.className = "alert-box alert-warning";
-                alertBox.innerHTML = `<strong>⚠️ Offline Mode:</strong> PSX live CORS proxy restriction active. Displaying realistic baseline data for <strong>${symbol}</strong>.`;
-                rawTicks = generateRealisticFallback(symbol);
+            } catch (e) {
+                console.warn(`Proxy failed: ${url}`, e);
             }
         }
 
-        processFootprintAnalysis(symbol, rawTicks);
+        if (!isLive) {
+            alertBox.className = "alert-box alert-warning";
+            alertBox.innerHTML = `<strong>⚠️ LIVE API BLOCKED BY BROWSER:</strong> The free public CORS proxies are currently blocked on your network or browser for PSX servers. Direct real-time fetch to PSX failed.`;
+            // Fallback for visual rendering to prevent app failure
+            rawTicks = getEmergencyBaseline(symbol);
+        }
+
+        processFootprintAnalysis(symbol, rawTicks, isLive);
     }
 
-    function generateRealisticFallback(symbol) {
-        // Expanded price base mappings for PSX tickers in offline mode
-        let basePrice = 25.0; // Default sensible baseline
-        
-        if (symbol === 'PRL') basePrice = 26.50;
-        else if (symbol === 'LUCK') basePrice = 440.0;
-        else if (symbol === 'OGDC') basePrice = 145.0;
-        else if (symbol === 'SYS') basePrice = 420.0;
-        else if (symbol === 'CNERGY') basePrice = 4.50;
-        else if (symbol === 'MEBL') basePrice = 220.0;
-        else if (symbol === 'TRG') basePrice = 55.0;
-        else if (symbol === 'FCCL') basePrice = 22.0;
-        else if (symbol === 'MLCF') basePrice = 38.0;
-        else if (symbol === 'KEL' || symbol === 'KEL') basePrice = 4.80;
-        else if (symbol === 'TPLP') basePrice = 11.50;
+    function getEmergencyBaseline(symbol) {
+        // Correct real-world baseline estimates for main PSX symbols
+        let base = 26.50; // PRL realistic level
+        if (symbol === 'LUCK') base = 440.0;
+        else if (symbol === 'OGDC') base = 145.0;
+        else if (symbol === 'SYS') base = 420.0;
+        else if (symbol === 'CNERGY') base = 4.50;
+        else if (symbol === 'MEBL') base = 220.0;
+        else if (symbol === 'TRG') base = 55.0;
+        else if (symbol === 'FCCL') base = 22.0;
+        else if (symbol === 'MLCF') base = 38.0;
 
         let ticks = [];
         let now = new Date();
         for (let i = 25; i >= 0; i--) {
             let t = new Date(now.getTime() - i * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            let change = (Math.random() - 0.48) * (basePrice * 0.005);
-            basePrice = Math.max(0.5, basePrice + change);
-            let vol = Math.floor(Math.random() * 85000) + 5000;
-            ticks.push({ time: t, price: basePrice, volume: vol });
+            let change = (Math.random() - 0.48) * (base * 0.005);
+            base = Math.max(0.5, base + change);
+            ticks.push({ time: t, price: base, volume: Math.floor(Math.random() * 50000) + 5000 });
         }
         return ticks;
     }
 
-    function processFootprintAnalysis(symbol, ticks) {
+    function processFootprintAnalysis(symbol, ticks, isLive) {
         const prices = ticks.map(t => t.price);
         const volumes = ticks.map(t => t.volume);
         const times = ticks.map(t => t.time);
@@ -350,7 +333,7 @@
         const pctChange = ((latestPrice - openPrice) / openPrice) * 100;
         
         const totalVol = volumes.reduce((a, b) => a + b, 0);
-        const spread = Math.max(0.05, maxPrice - minPrice);
+        const spread = Math.max(0.01, maxPrice - minPrice);
         const vsr = totalVol / spread;
 
         document.getElementById('mPrice').innerText = `PKR ${latestPrice.toFixed(2)}`;
@@ -364,20 +347,18 @@
 
         const alertBox = document.getElementById('diagnosticAlert');
 
-        const volumeThreshold = latestPrice > 200 ? 250000 : 1000000;
-
-        if (vsr > volumeThreshold && spread < (latestPrice * 0.012)) {
-            alertBox.className = "alert-box alert-error";
-            alertBox.innerHTML = `<strong>🔴 INSTITUTIONAL ICEBERG ACCUMULATION FOUND:</strong> Heavy volume (${totalVol.toLocaleString()} shares) absorbed within a narrow PKR ${spread.toFixed(2)} range. Smart money is filling orders passively.`;
-        } else if (latestPrice < maxPrice && (maxPrice - latestPrice) > (spread * 0.45)) {
-            alertBox.className = "alert-box alert-warning";
-            alertBox.innerHTML = `<strong>⚠️ RETAIL TRAP DETECTED:</strong> Price pushed to PKR ${maxPrice.toFixed(2)} but rejected. High-volume distribution into retail buy orders.`;
-        } else if (pctChange > 0.8 && vsr > (volumeThreshold / 2)) {
-            alertBox.className = "alert-box alert-info";
-            alertBox.innerHTML = `<strong>🟢 AGGRESSIVE INSTITUTIONAL BUYING:</strong> Strong momentum backed by volume. Institutions sweeping ask orders.`;
-        } else {
-            alertBox.className = "alert-box alert-info";
-            alertBox.innerHTML = `<strong>🟢 REGULAR TRADING ACTIVITY:</strong> Standard market flow for ${symbol}.`;
+        if (isLive) {
+            const volumeThreshold = latestPrice > 200 ? 250000 : 1000000;
+            if (vsr > volumeThreshold && spread < (latestPrice * 0.012)) {
+                alertBox.className = "alert-box alert-error";
+                alertBox.innerHTML = `<strong>🔴 LIVE DATA: INSTITUTIONAL ICEBERG FOUND (${symbol}):</strong> Heavy volume (${totalVol.toLocaleString()} shares) absorbed within a narrow PKR ${spread.toFixed(2)} range.`;
+            } else if (pctChange > 0.8) {
+                alertBox.className = "alert-box alert-info";
+                alertBox.innerHTML = `<strong>🟢 LIVE DATA: AGGRESSIVE INSTITUTIONAL BUYING (${symbol}):</strong> Positive momentum backed by order flow.`;
+            } else {
+                alertBox.className = "alert-box alert-info";
+                alertBox.innerHTML = `<strong>🟢 LIVE DATA CONNECTED (${symbol}):</strong> Real-time trade tick analysis active from PSX Data Portal.`;
+            }
         }
 
         const trace = {
@@ -391,7 +372,7 @@
         };
 
         const layout = {
-            title: { text: `${symbol} Intraday Footprint Chart`, font: { color: '#fff', size: 14 } },
+            title: { text: `${symbol} Footprint (${isLive ? 'LIVE PSX FEED' : 'OFFLINE MODE'})`, font: { color: '#fff', size: 14 } },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
             font: { color: '#8a94a6' },
@@ -407,5 +388,4 @@
 </script>
 
 </body>
-    </html>
-    
+</html>
