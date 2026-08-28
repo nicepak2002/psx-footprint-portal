@@ -238,7 +238,7 @@
         const alertBox = document.getElementById('diagnosticAlert');
         
         alertBox.className = "alert-box alert-info";
-        alertBox.innerHTML = `<strong>Fetching Live PSX Data...</strong> Requesting intraday tick stream for <strong>${symbol}</strong>.`;
+        alertBox.innerHTML = `<strong>Fetching Live PSX Data...</strong> Requesting intraday feed for <strong>${symbol}</strong>.`;
 
         const workerUrl = `https://psx-proxy.nice-pak2002-612.workers.dev/?symbol=${symbol}`;
 
@@ -246,40 +246,30 @@
             const res = await fetch(workerUrl);
             const rawData = await res.json();
 
-            // PSX intraday API can return data array directly or inside data key
+            if (rawData.error) {
+                throw new Error(rawData.error);
+            }
+
             const ticksArray = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
             if (ticksArray && ticksArray.length > 0) {
                 const parsedTicks = ticksArray.map(item => {
-                    // Handle timestamp milliseconds vs seconds
                     const timestamp = item[0] > 10000000000 ? item[0] : item[0] * 1000;
-                    
-                    // Detect if Price is in index 1 or index 2
-                    let priceVal = parseFloat(item[1]);
-                    let volVal = parseInt(item[2]);
-
-                    // If index 1 is high volume number, swap them
-                    if (priceVal > 500 && volVal < 500) {
-                        const temp = priceVal;
-                        priceVal = volVal;
-                        volVal = temp;
-                    }
-
                     return {
                         time: new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        price: priceVal,
-                        volume: isNaN(volVal) ? 0 : volVal
+                        price: parseFloat(item[1]),
+                        volume: parseInt(item[2]) || 0
                     };
                 }).filter(t => t.price > 0);
 
                 processFootprintAnalysis(symbol, parsedTicks);
             } else {
-                throw new Error("No intraday trade data returned (Market closed or symbol invalid).");
+                throw new Error("No trade ticks available. (Market closed or symbol invalid)");
             }
         } catch (e) {
             console.error(e);
             alertBox.className = "alert-box alert-error";
-            alertBox.innerHTML = `<strong>🔴 CONNECTION ERROR:</strong> Could not retrieve live data for <strong>${symbol}</strong>. Verify ticker symbol or market hours.`;
+            alertBox.innerHTML = `<strong>🔴 CONNECTION ERROR:</strong> Could not retrieve data for <strong>${symbol}</strong>: ${e.message}`;
         }
     }
 
@@ -312,13 +302,13 @@
 
         if (vsr > volumeThreshold && spread < (latestPrice * 0.012)) {
             alertBox.className = "alert-box alert-error";
-            alertBox.innerHTML = `<strong>🔴 INSTITUTIONAL ICEBERG FOUND (${symbol}):</strong> High volume absorption (${totalVol.toLocaleString()} shares) within a tight range of PKR ${spread.toFixed(2)}.`;
+            alertBox.innerHTML = `<strong>🔴 INSTITUTIONAL ICEBERG FOUND (${symbol}):</strong> Heavy volume (${totalVol.toLocaleString()} shares) absorbed within PKR ${spread.toFixed(2)} range.`;
         } else if (pctChange > 0.8) {
             alertBox.className = "alert-box alert-info";
-            alertBox.innerHTML = `<strong>🟢 AGGRESSIVE BUYING (${symbol}):</strong> Positive intraday price action backed by order flow.`;
+            alertBox.innerHTML = `<strong>🟢 AGGRESSIVE BUYING (${symbol}):</strong> Positive momentum backed by order flow.`;
         } else {
             alertBox.className = "alert-box alert-info";
-            alertBox.innerHTML = `<strong>🟢 LIVE DATA CONNECTED (${symbol}):</strong> Real-time price feed loaded successfully.`;
+            alertBox.innerHTML = `<strong>🟢 LIVE DATA CONNECTED (${symbol}):</strong> Intraday trade tick stream active.`;
         }
 
         const trace = {
