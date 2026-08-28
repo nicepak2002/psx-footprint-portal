@@ -214,7 +214,7 @@
     </div>
 
     <div id="diagnosticAlert" class="alert-box alert-info">
-        <strong>Status:</strong> Initializing connection to PSX Data Engine...
+        <strong>Status:</strong> Connecting to Cloudflare backend engine...
     </div>
 
     <div class="metrics-grid">
@@ -255,70 +255,31 @@
         const alertBox = document.getElementById('diagnosticAlert');
         
         alertBox.className = "alert-box alert-info";
-        alertBox.innerHTML = `<strong>Fetching Live PSX Data...</strong> Connecting to backend servers for <strong>${symbol}</strong>.`;
+        alertBox.innerHTML = `<strong>Fetching Live PSX Data...</strong> Requesting real-time feed via Cloudflare Worker for <strong>${symbol}</strong>.`;
 
-        let rawTicks = [];
-        let isLive = false;
+        // Direct Cloudflare Worker API link
+        const workerUrl = `https://psx-proxy.nice-pak2002-612.workers.dev/?symbol=${symbol}`;
 
-        // Array of proxies to try sequentially
-        const psxTarget = `https://psx-proxy.nice-pak2002-612.workers.dev/${symbol}`;
-        const proxyUrls = [
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(psxTarget)}`,
-            `https://corsproxy.io/?${encodeURIComponent(psxTarget)}`,
-            `https://proxy.cors.sh/${psxTarget}`
-        ];
+        try {
+            const res = await fetch(workerUrl);
+            const data = await res.json();
 
-        for (let url of proxyUrls) {
-            try {
-                const res = await fetch(url);
-                if (!res.ok) continue;
-                const data = await res.json();
-                
-                if (data && data.data && data.data.length > 0) {
-                    rawTicks = data.data.map(item => ({
-                        time: new Date(item[0] * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        price: parseFloat(item[1]),
-                        volume: parseInt(item[2])
-                    }));
-                    isLive = true;
-                    break;
-                }
-            } catch (e) {
-                console.warn(`Proxy failed: ${url}`, e);
+            if (data && data.data && data.data.length > 0) {
+                const rawTicks = data.data.map(item => ({
+                    time: new Date(item[0] * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    price: parseFloat(item[1]),
+                    volume: parseInt(item[2])
+                }));
+
+                processFootprintAnalysis(symbol, rawTicks, true);
+            } else {
+                throw new Error("No trade data returned from PSX (Market may be closed or symbol invalid).");
             }
+        } catch (e) {
+            console.error(e);
+            alertBox.className = "alert-box alert-error";
+            alertBox.innerHTML = `<strong>🔴 CONNECTION ERROR:</strong> Could not retrieve live data for <strong>${symbol}</strong>. Check Cloudflare Worker deployment.`;
         }
-
-        if (!isLive) {
-            alertBox.className = "alert-box alert-warning";
-            alertBox.innerHTML = `<strong>⚠️ LIVE API BLOCKED BY BROWSER:</strong> The free public CORS proxies are currently blocked on your network or browser for PSX servers. Direct real-time fetch to PSX failed.`;
-            // Fallback for visual rendering to prevent app failure
-            rawTicks = getEmergencyBaseline(symbol);
-        }
-
-        processFootprintAnalysis(symbol, rawTicks, isLive);
-    }
-
-    function getEmergencyBaseline(symbol) {
-        // Correct real-world baseline estimates for main PSX symbols
-        let base = 26.50; // PRL realistic level
-        if (symbol === 'LUCK') base = 440.0;
-        else if (symbol === 'OGDC') base = 145.0;
-        else if (symbol === 'SYS') base = 420.0;
-        else if (symbol === 'CNERGY') base = 4.50;
-        else if (symbol === 'MEBL') base = 220.0;
-        else if (symbol === 'TRG') base = 55.0;
-        else if (symbol === 'FCCL') base = 22.0;
-        else if (symbol === 'MLCF') base = 38.0;
-
-        let ticks = [];
-        let now = new Date();
-        for (let i = 25; i >= 0; i--) {
-            let t = new Date(now.getTime() - i * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            let change = (Math.random() - 0.48) * (base * 0.005);
-            base = Math.max(0.5, base + change);
-            ticks.push({ time: t, price: base, volume: Math.floor(Math.random() * 50000) + 5000 });
-        }
-        return ticks;
     }
 
     function processFootprintAnalysis(symbol, ticks, isLive) {
@@ -346,19 +307,17 @@
         document.getElementById('mVSR').innerText = Math.round(vsr).toLocaleString();
 
         const alertBox = document.getElementById('diagnosticAlert');
+        const volumeThreshold = latestPrice > 200 ? 250000 : 1000000;
 
-        if (isLive) {
-            const volumeThreshold = latestPrice > 200 ? 250000 : 1000000;
-            if (vsr > volumeThreshold && spread < (latestPrice * 0.012)) {
-                alertBox.className = "alert-box alert-error";
-                alertBox.innerHTML = `<strong>🔴 LIVE DATA: INSTITUTIONAL ICEBERG FOUND (${symbol}):</strong> Heavy volume (${totalVol.toLocaleString()} shares) absorbed within a narrow PKR ${spread.toFixed(2)} range.`;
-            } else if (pctChange > 0.8) {
-                alertBox.className = "alert-box alert-info";
-                alertBox.innerHTML = `<strong>🟢 LIVE DATA: AGGRESSIVE INSTITUTIONAL BUYING (${symbol}):</strong> Positive momentum backed by order flow.`;
-            } else {
-                alertBox.className = "alert-box alert-info";
-                alertBox.innerHTML = `<strong>🟢 LIVE DATA CONNECTED (${symbol}):</strong> Real-time trade tick analysis active from PSX Data Portal.`;
-            }
+        if (vsr > volumeThreshold && spread < (latestPrice * 0.012)) {
+            alertBox.className = "alert-box alert-error";
+            alertBox.innerHTML = `<strong>🔴 LIVE DATA: INSTITUTIONAL ICEBERG FOUND (${symbol}):</strong> Heavy volume (${totalVol.toLocaleString()} shares) absorbed within a narrow PKR ${spread.toFixed(2)} range.`;
+        } else if (pctChange > 0.8) {
+            alertBox.className = "alert-box alert-info";
+            alertBox.innerHTML = `<strong>🟢 LIVE DATA: AGGRESSIVE INSTITUTIONAL BUYING (${symbol}):</strong> Positive momentum backed by order flow.`;
+        } else {
+            alertBox.className = "alert-box alert-info";
+            alertBox.innerHTML = `<strong>🟢 LIVE DATA CONNECTED (${symbol}):</strong> Real-time trade tick analysis active from PSX via Cloudflare Worker.`;
         }
 
         const trace = {
@@ -372,7 +331,7 @@
         };
 
         const layout = {
-            title: { text: `${symbol} Footprint (${isLive ? 'LIVE PSX FEED' : 'OFFLINE MODE'})`, font: { color: '#fff', size: 14 } },
+            title: { text: `${symbol} Footprint (LIVE PSX FEED)`, font: { color: '#fff', size: 14 } },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
             font: { color: '#8a94a6' },
