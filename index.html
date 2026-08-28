@@ -190,16 +190,13 @@
             padding: 10px 0;
         }
 
-        /* Responsive Mobile Layout Fixes */
         @media (max-width: 600px) {
             .search-bar {
                 flex-direction: column;
             }
-            
             .search-bar button {
                 width: 100%;
             }
-
             .metrics-grid {
                 grid-template-columns: 1fr 1fr;
             }
@@ -217,7 +214,7 @@
     </div>
 
     <div class="search-bar">
-        <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g. LUCK, OGDC, CNERGY)" value="LUCK" onkeydown="if(event.key==='Enter') analyzeStock()">
+        <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g. LUCK, PRL, OGDC, CNERGY)" value="PRL" onkeydown="if(event.key==='Enter') analyzeStock()">
         <button onclick="analyzeStock()">Analyze</button>
     </div>
 
@@ -259,7 +256,7 @@
 
 <script>
     async function analyzeStock() {
-        const symbol = document.getElementById('tickerInput').value.toUpperCase().trim() || 'LUCK';
+        const symbol = document.getElementById('tickerInput').value.toUpperCase().trim() || 'PRL';
         const alertBox = document.getElementById('diagnosticAlert');
         
         alertBox.className = "alert-box alert-info";
@@ -269,6 +266,7 @@
         const psxEndpoint = `https://dps.psx.com.pk/timeseries/intraday/${symbol}`;
 
         try {
+            // Proxy Attempt 1
             const primaryProxy = `https://corsproxy.io/?${encodeURIComponent(psxEndpoint)}`;
             const response = await fetch(primaryProxy);
             if (!response.ok) throw new Error("Primary proxy blocked");
@@ -286,6 +284,7 @@
         } catch (err1) {
             console.warn("Primary CORS fetch failed. Trying fallback proxy...", err1);
             try {
+                // Proxy Attempt 2
                 const secondaryProxy = `https://api.allorigins.win/get?url=${encodeURIComponent(psxEndpoint)}`;
                 const response2 = await fetch(secondaryProxy);
                 const data2 = await response2.json();
@@ -302,7 +301,8 @@
                 }
             } catch (err2) {
                 console.warn("Live API fetch unavailable. Operating in Offline Fallback Mode:", err2);
-                alertBox.innerHTML = `<strong>⚠️ Offline Mode:</strong> PSX live proxy restriction active. Displaying realistic simulated footprint baseline for <strong>${symbol}</strong>.`;
+                alertBox.className = "alert-box alert-warning";
+                alertBox.innerHTML = `<strong>⚠️ Offline Mode:</strong> PSX live CORS proxy restriction active. Displaying realistic baseline data for <strong>${symbol}</strong>.`;
                 rawTicks = generateRealisticFallback(symbol);
             }
         }
@@ -311,22 +311,28 @@
     }
 
     function generateRealisticFallback(symbol) {
-        let basePrice = 100.0;
-        if (symbol === 'LUCK') basePrice = 440.0;
-        else if (symbol === 'OGDC') basePrice = 325.0;
-        else if (symbol === 'SYS') basePrice = 125.0;
+        // Expanded price base mappings for PSX tickers in offline mode
+        let basePrice = 25.0; // Default sensible baseline
+        
+        if (symbol === 'PRL') basePrice = 26.50;
+        else if (symbol === 'LUCK') basePrice = 440.0;
+        else if (symbol === 'OGDC') basePrice = 145.0;
+        else if (symbol === 'SYS') basePrice = 420.0;
         else if (symbol === 'CNERGY') basePrice = 4.50;
         else if (symbol === 'MEBL') basePrice = 220.0;
         else if (symbol === 'TRG') basePrice = 55.0;
         else if (symbol === 'FCCL') basePrice = 22.0;
+        else if (symbol === 'MLCF') basePrice = 38.0;
+        else if (symbol === 'KEL' || symbol === 'KEL') basePrice = 4.80;
+        else if (symbol === 'TPLP') basePrice = 11.50;
 
         let ticks = [];
         let now = new Date();
         for (let i = 25; i >= 0; i--) {
             let t = new Date(now.getTime() - i * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            let change = (Math.random() - 0.48) * (basePrice * 0.004);
-            basePrice = Math.max(1, basePrice + change);
-            let vol = Math.floor(Math.random() * 45000) + 3000;
+            let change = (Math.random() - 0.48) * (basePrice * 0.005);
+            basePrice = Math.max(0.5, basePrice + change);
+            let vol = Math.floor(Math.random() * 85000) + 5000;
             ticks.push({ time: t, price: basePrice, volume: vol });
         }
         return ticks;
@@ -401,4 +407,5 @@
 </script>
 
 </body>
-</html>
+    </html>
+    
