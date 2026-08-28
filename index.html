@@ -250,17 +250,34 @@
                 throw new Error(rawData.error);
             }
 
+            // Standardize array detection from PSX payload
             const ticksArray = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
             if (ticksArray && ticksArray.length > 0) {
                 const parsedTicks = ticksArray.map(item => {
+                    // Convert seconds timestamp to milliseconds if needed
                     const timestamp = item[0] > 10000000000 ? item[0] : item[0] * 1000;
+                    
+                    let priceVal = parseFloat(item[1]);
+                    let volVal = parseInt(item[2]);
+
+                    // Dynamic column swap detection if volume and price indices flip
+                    if (priceVal > 500 && volVal < 500) {
+                        const temp = priceVal;
+                        priceVal = volVal;
+                        volVal = temp;
+                    }
+
                     return {
                         time: new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        price: parseFloat(item[1]),
-                        volume: parseInt(item[2]) || 0
+                        price: priceVal,
+                        volume: isNaN(volVal) ? 0 : volVal
                     };
-                }).filter(t => t.price > 0);
+                }).filter(t => !isNaN(t.price) && t.price > 0);
+
+                if (parsedTicks.length === 0) {
+                    throw new Error("Received empty or malformed price data.");
+                }
 
                 processFootprintAnalysis(symbol, parsedTicks);
             } else {
