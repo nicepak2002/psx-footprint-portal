@@ -261,7 +261,7 @@
         let isLive = false;
 
         // Array of proxies to try sequentially
-        const psxTarget = `https://dps.psx.com.pk/timeseries/intraday/${symbol}`;
+        const psxTarget = `https://psx-proxy.nice-pak2002-612.workers.dev/${symbol}`;
         const proxyUrls = [
             `https://api.allorigins.win/raw?url=${encodeURIComponent(psxTarget)}`,
             `https://corsproxy.io/?${encodeURIComponent(psxTarget)}`,
