@@ -1,4 +1,4 @@
 streamlit
-pandas
+websockets
 plotly
-requests
+pandas
