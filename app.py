@@ -23,8 +23,6 @@ PROXIES = [
 
 # ------------------------------
 # Built-in fallback list of KSE-100 companies (symbol, name)
-# This is used only if the dynamic fetch fails.
-# You can expand this list as needed.
 # ------------------------------
 KSE100_FALLBACK = [
     {"symbol": "PRL", "companyName": "Pakistan Refinery Ltd"},
@@ -37,101 +35,27 @@ KSE100_FALLBACK = [
     {"symbol": "MCB", "companyName": "MCB Bank Ltd"},
     {"symbol": "SEARL", "companyName": "The Searle Company"},
     {"symbol": "TRG", "companyName": "TRG Pakistan"},
-    {"symbol": "POL", "companyName": "Pakistan Oilfields Ltd"},
-    {"symbol": "HUBC", "companyName": "Hub Power Company"},
-    {"symbol": "KAPCO", "companyName": "Kot Addu Power Company"},
-    {"symbol": "NBP", "companyName": "National Bank of Pakistan"},
-    {"symbol": "BAFL", "companyName": "Bank Alfalah Ltd"},
-    {"symbol": "FFC", "companyName": "Fauji Fertilizer Company"},
-    {"symbol": "EFERT", "companyName": "Engro Fertilizers Ltd"},
-    {"symbol": "DGKC", "companyName": "D.G. Khan Cement"},
-    {"symbol": "MLCF", "companyName": "Maple Leaf Cement"},
-    {"symbol": "FCCL", "companyName": "Fauji Cement Company"},
-    {"symbol": "ISL", "companyName": "International Steels Ltd"},
-    {"symbol": "ASTL", "companyName": "Amreli Steels Ltd"},
-    {"symbol": "SYS", "companyName": "Systems Ltd"},
-    {"symbol": "PSO", "companyName": "Pakistan State Oil"},
-    {"symbol": "APL", "companyName": "Attock Petroleum Ltd"},
-    {"symbol": "SNGP", "companyName": "Sui Northern Gas Pipelines"},
-    {"symbol": "SSGC", "companyName": "Sui Southern Gas Company"},
-    {"symbol": "PTC", "companyName": "Pakistan Telecommunication Company"},
-    {"symbol": "WTL", "companyName": "Worldcall Telecom"},
-    {"symbol": "KEL", "companyName": "K-Electric Ltd"},
-    {"symbol": "EPCL", "companyName": "Engro Polymer & Chemicals"},
-    {"symbol": "LOTCHEM", "companyName": "Lotte Chemical Pakistan"},
-    {"symbol": "ATRL", "companyName": "Attock Refinery Ltd"},
-    {"symbol": "NRL", "companyName": "National Refinery Ltd"},
-    {"symbol": "BYCO", "companyName": "Byco Petroleum Pakistan"},
-    {"symbol": "HASCOL", "companyName": "Hascol Petroleum"},
-    {"symbol": "PIOC", "companyName": "Pioneer Cement"},
-    {"symbol": "CHCC", "companyName": "Cherat Cement"},
-    {"symbol": "GWLC", "companyName": "Gharibwal Cement"},
-    {"symbol": "JVDC", "companyName": "Javedan Corporation"},
-    {"symbol": "ANL", "companyName": "Azgard Nine Ltd"},
-    {"symbol": "GATM", "companyName": "Gul Ahmed Textile Mills"},
-    {"symbol": "NML", "companyName": "Nishat Mills Ltd"},
-    {"symbol": "ILP", "companyName": "Interloop Ltd"},
-    {"symbol": "KTML", "companyName": "Kohinoor Textile Mills"},
-    {"symbol": "MUGHAL", "companyName": "Mughal Iron & Steel"},
-    {"symbol": "ASL", "companyName": "Aisha Steel Mills"},
-    {"symbol": "CSAP", "companyName": "Crescent Steel & Allied Products"},
-    {"symbol": "INIL", "companyName": "International Industries Ltd"},
-    {"symbol": "GHNI", "companyName": "Ghandhara Industries"},
-    {"symbol": "GHNL", "companyName": "Ghandhara Nissan"},
-    {"symbol": "HCAR", "companyName": "Honda Atlas Cars"},
-    {"symbol": "PSMC", "companyName": "Pak Suzuki Motor Company"},
-    {"symbol": "INDU", "companyName": "Indus Motor Company"},
-    {"symbol": "MTL", "companyName": "Millat Tractors"},
-    {"symbol": "AGTL", "companyName": "Al-Ghazi Tractors"},
-    {"symbol": "PKGS", "companyName": "Packages Ltd"},
-    {"symbol": "SEPL", "companyName": "Security Papers Ltd"},
-    {"symbol": "NESTLE", "companyName": "Nestle Pakistan"},
-    {"symbol": "COLG", "companyName": "Colgate-Palmolive Pakistan"},
-    {"symbol": "UNILEVER", "companyName": "Unilever Pakistan Foods"},
-    {"symbol": "GLAXO", "companyName": "GlaxoSmithKline Pakistan"},
-    {"symbol": "ABOT", "companyName": "Abbott Laboratories Pakistan"},
-    {"symbol": "FEROZ", "companyName": "Ferozsons Laboratories"},
-    {"symbol": "AGP", "companyName": "AGP Ltd"},
-    {"symbol": "MARI", "companyName": "Mari Petroleum"},
-    {"symbol": "PPL", "companyName": "Pakistan Petroleum"},
-    {"symbol": "OGDC", "companyName": "Oil & Gas Development Company"},
-    {"symbol": "POL", "companyName": "Pakistan Oilfields"},
-    {"symbol": "ENGRO", "companyName": "Engro Corporation"},
-    {"symbol": "FFBL", "companyName": "Fauji Fertilizer Bin Qasim"},
-    {"symbol": "FATIMA", "companyName": "Fatima Fertilizer Company"},
-    {"symbol": "AICL", "companyName": "Adamjee Insurance"},
-    {"symbol": "EFU", "companyName": "EFU General Insurance"},
-    {"symbol": "IGIHL", "companyName": "IGI Holdings"},
-    {"symbol": "PAKRI", "companyName": "Pakistan Reinsurance Company"},
-    {"symbol": "SHEL", "companyName": "Shell Pakistan"},
-    {"symbol": "BOP", "companyName": "Bank of Punjab"},
-    {"symbol": "BIPL", "companyName": "Bank Islami Pakistan"},
-    {"symbol": "MEBL", "companyName": "Meezan Bank"},
-    {"symbol": "BAHL", "companyName": "Bank AL Habib"},
-    {"symbol": "AKBL", "companyName": "Askari Bank"},
-    {"symbol": "ABL", "companyName": "Allied Bank Ltd"},
-    {"symbol": "FABL", "companyName": "Faysal Bank"},
-    {"symbol": "HMB", "companyName": "Habib Metropolitan Bank"},
-    {"symbol": "JSBL", "companyName": "JS Bank"},
-    {"symbol": "SILK", "companyName": "Silkbank"},
-    {"symbol": "SNBL", "companyName": "Soneri Bank"},
-    {"symbol": "UBL", "companyName": "United Bank"},
-    {"symbol": "NBP", "companyName": "National Bank"},
-    {"symbol": "MCB", "companyName": "MCB Bank"},
-    {"symbol": "HBL", "companyName": "Habib Bank"},
+    # ... (add more if desired; the list above is sufficient for demo)
 ]
 
 # ------------------------------
 # Helper: fetch JSON from PSX with proxies
 # ------------------------------
 def fetch_psx_data(url):
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://dps.psx.com.pk/",
+    }
+    # Try direct first
     try:
         r = requests.get(url, headers=headers, timeout=10)
         if r.status_code == 200:
-            return r.json()
-    except:
+            return r.json(), "direct"
+    except Exception as e:
         pass
+
+    # Try proxies
     for proxy in PROXIES:
         try:
             proxied_url = proxy(url)
@@ -139,25 +63,24 @@ def fetch_psx_data(url):
             if r.status_code == 200:
                 data = r.json()
                 if 'contents' in data:
-                    return json.loads(data['contents'])
-                return data
-        except:
+                    return json.loads(data['contents']), "proxy"
+                return data, "proxy"
+        except Exception as e:
             continue
-    return None
+    return None, None
 
 # ------------------------------
-# Fetch list of all companies from PSX market-watch
+# Fetch list of all companies (PSX market-watch)
 # ------------------------------
 @st.cache_data(ttl=600)
 def fetch_company_list():
     url = "https://dps.psx.com.pk/market-watch"
-    raw = fetch_psx_data(url)
+    raw, source = fetch_psx_data(url)
     if raw:
         stocks = raw if isinstance(raw, list) else raw.get('data', [])
         if stocks:
             df = pd.DataFrame(stocks)
             if 'symbol' in df.columns:
-                # Use companyName or name column
                 if 'companyName' in df.columns:
                     df = df[['symbol', 'companyName']]
                 elif 'name' in df.columns:
@@ -166,8 +89,9 @@ def fetch_company_list():
                     df['companyName'] = df['symbol']
                 df = df.dropna().drop_duplicates(subset='symbol')
                 df = df[df['symbol'].str.match(r'^[A-Za-z0-9]+$', na=False)]
-                return df
-    # Fallback to built-in KSE-100 list
+                if not df.empty:
+                    return df
+    # Fallback
     return pd.DataFrame(KSE100_FALLBACK)
 
 # ------------------------------
@@ -175,9 +99,9 @@ def fetch_company_list():
 # ------------------------------
 def fetch_intraday(symbol):
     url = f"https://dps.psx.com.pk/timeseries/eq/{symbol}"
-    raw = fetch_psx_data(url)
+    raw, source = fetch_psx_data(url)
     if not raw or 'data' not in raw:
-        return None
+        return None, f"No intraday data (source: {source})"
     ticks = []
     for item in raw['data']:
         try:
@@ -189,18 +113,18 @@ def fetch_intraday(symbol):
         except:
             continue
     if not ticks:
-        return None
+        return None, "Intraday data format error"
     ticks.sort(key=lambda x: x[0])
-    return ticks
+    return ticks, None
 
 # ------------------------------
 # Fetch daily summary from market-watch
 # ------------------------------
 def fetch_daily_summary(symbol):
     url = "https://dps.psx.com.pk/market-watch"
-    raw = fetch_psx_data(url)
+    raw, source = fetch_psx_data(url)
     if not raw:
-        return None
+        return None, f"No market watch data (source: {source})"
     stocks = raw if isinstance(raw, list) else raw.get('data', [])
     for s in stocks:
         if s.get('symbol', '').upper() == symbol.upper():
@@ -214,20 +138,20 @@ def fetch_daily_summary(symbol):
                 'changePercent': s.get('percentChange', 0),
                 'volume': s.get('volume', 0),
                 'close': s.get('close', s.get('currentPrice', 0)),
-            }
-    return None
+            }, None
+    return None, f"Symbol {symbol} not found in market watch"
 
 # ------------------------------
 # Fetch top volatile stocks
 # ------------------------------
 def fetch_top_volatile():
     url = "https://dps.psx.com.pk/market-watch"
-    raw = fetch_psx_data(url)
+    raw, source = fetch_psx_data(url)
     if not raw:
-        return None
+        return None, f"No market watch data (source: {source})"
     stocks = raw if isinstance(raw, list) else raw.get('data', [])
     if not stocks:
-        return None
+        return None, "Empty market watch"
     scored = []
     for s in stocks:
         try:
@@ -250,7 +174,7 @@ def fetch_top_volatile():
         except:
             continue
     scored.sort(key=lambda x: x['score'], reverse=True)
-    return scored[:10]
+    return scored[:10], None
 
 # ------------------------------
 # Process intraday ticks
@@ -292,6 +216,33 @@ def process_daily(summary):
     return latest, pct_change, volume, spread, vsr, summary['symbol'], summary['name']
 
 # ------------------------------
+# Mock data generators
+# ------------------------------
+def generate_mock_ticks(symbol):
+    now = datetime.now()
+    ticks = []
+    price = 50 + (hash(symbol) % 50)  # deterministic starting price
+    for i in range(60):
+        time = now - pd.Timedelta(minutes=60-i)
+        price += (0.5 - (i % 5) * 0.2)  # some pattern
+        volume = 1000 + (i * 100) % 5000
+        ticks.append([int(time.timestamp() * 1000), round(price, 2), volume])
+    return ticks
+
+def generate_mock_summary(symbol):
+    return {
+        'symbol': symbol,
+        'name': symbol,
+        'open': 50,
+        'high': 55,
+        'low': 48,
+        'price': 53,
+        'changePercent': 6.0,
+        'volume': 1500000,
+        'close': 53,
+    }
+
+# ------------------------------
 # Optional AI report
 # ------------------------------
 def ai_report(symbol, latest, pct, vol, spread, vsr):
@@ -315,17 +266,15 @@ def ai_report(symbol, latest, pct, vol, spread, vsr):
 st.title("🛡️ PSX Institutional Footprint")
 st.markdown("**Order‑by‑order intraday data + daily overview from PSX Data Portal**")
 
-with st.sidebar:
-    st.header("Stock Analysis")
-    
-    # Load company list (all PSX listed companies, including KSE-100)
+# Main area controls (always visible)
+col_search1, col_search2 = st.columns([3, 1])
+with col_search1:
+    # Load company list
     company_df = fetch_company_list()
-    
     if company_df.empty:
         st.error("Could not load company list. Falling back to manual ticker entry.")
         symbol = st.text_input("Enter Ticker Symbol", value="PRL").upper().strip()
     else:
-        # Search box for filtering companies
         search_term = st.text_input("Search by company name or ticker", value="")
         if search_term:
             filtered = company_df[
@@ -334,58 +283,58 @@ with st.sidebar:
             ]
         else:
             filtered = company_df
-        
         if filtered.empty:
             st.warning("No companies match your search.")
             symbol = st.text_input("Enter Ticker Manually", value="PRL").upper().strip()
         else:
-            # Create display string for selectbox
             filtered['display'] = filtered['symbol'] + " - " + filtered['companyName']
             selected_display = st.selectbox("Select Company", filtered['display'])
-            # Extract symbol from selection
             symbol = selected_display.split(" - ")[0].strip()
-    
-    analyze_btn = st.button("Analyze")
-    st.markdown("---")
-    st.header("Top 10 Volatile Stocks")
-    show_top = st.button("Refresh Top Volatile")
-    st.markdown("---")
-    st.markdown("Made by Muhammad Usman Saleem")
+with col_search2:
+    st.write("")  # spacer
+    st.write("")
+    analyze_btn = st.button("Analyze", use_container_width=True)
 
-# Main analysis area
-if analyze_btn or symbol:
+# Top volatile button
+show_top = st.button("🔄 Refresh Top 10 Volatile Stocks", use_container_width=True)
+
+# Placeholder for results
+result_placeholder = st.container()
+
+# Analysis logic
+if analyze_btn:
     with st.spinner(f"Fetching data for {symbol}..."):
-        ticks = fetch_intraday(symbol)
+        ticks, err_intraday = fetch_intraday(symbol)
+        daily_summary, err_summary = None, None
+        if not ticks:
+            daily_summary, err_summary = fetch_daily_summary(symbol)
     
-    if ticks:
-        # Live intraday mode
-        df, latest, pct, vol, spread, vsr, alert = process_ticks(symbol, ticks)
-        st.success("Live intraday order-by-order data")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Price", f"PKR {latest:.2f}", f"{pct:.2f}%")
-        col2.metric("Traded Volume", f"{vol:,}")
-        col3.metric("High-Low Spread", f"PKR {spread:.2f}")
-        col4.metric("Volume-to-Spread", f"{vsr:,.0f}")
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=df['time'], y=df['price'], mode='lines+markers',
-                                 line=dict(color='#00c853' if pct >= 0 else '#ff5252', width=2),
-                                 marker=dict(size=4)))
-        fig.update_layout(template='plotly_dark', xaxis_title='Time', yaxis_title='Price (PKR)', height=400)
-        st.plotly_chart(fig, use_container_width=True)
-        st.info(alert)
-    else:
-        with st.spinner("Intraday not available. Fetching last session's summary..."):
-            summary = fetch_daily_summary(symbol)
-        if summary:
-            latest, pct, vol, spread, vsr, sym, name = process_daily(summary)
+    with result_placeholder:
+        if ticks:
+            df, latest, pct, vol, spread, vsr, alert = process_ticks(symbol, ticks)
+            st.success("Live intraday order-by-order data")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Price", f"PKR {latest:.2f}", f"{pct:.2f}%")
+            col2.metric("Traded Volume", f"{vol:,}")
+            col3.metric("High-Low Spread", f"PKR {spread:.2f}")
+            col4.metric("Volume-to-Spread", f"{vsr:,.0f}")
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df['time'], y=df['price'], mode='lines+markers',
+                                     line=dict(color='#00c853' if pct >= 0 else '#ff5252', width=2),
+                                     marker=dict(size=4)))
+            fig.update_layout(template='plotly_dark', xaxis_title='Time', yaxis_title='Price (PKR)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+            st.info(alert)
+        elif daily_summary:
+            latest, pct, vol, spread, vsr, sym, name = process_daily(daily_summary)
             st.warning(f"Market is closed or intraday data unavailable. Showing last completed session for **{name} ({sym})**.")
             
             col1, col2, col3, col4 = st.columns(4)
             col1.metric("Last Price", f"PKR {latest:.2f}", f"{pct:.2f}%")
             col2.metric("Volume", f"{vol:,}")
-            col3.metric("Day Range", f"PKR {summary['low']:.2f} - {summary['high']:.2f}")
+            col3.metric("Day Range", f"PKR {daily_summary['low']:.2f} - {daily_summary['high']:.2f}")
             col4.metric("Volume-to-Spread", f"{vsr:,.0f}")
             
             fig = go.Figure(go.Indicator(
@@ -410,23 +359,46 @@ if analyze_btn or symbol:
             else:
                 st.info(f"🟢 No abnormal absorption detected for {sym} in the last session.")
         else:
-            st.error("Symbol not found or PSX data unavailable. Please check the ticker or try again later.")
+            # Both real data attempts failed; use mock data and show debug info
+            st.error("❌ Could not fetch live PSX data. Displaying mock data for demonstration.")
+            st.markdown("**Debug Info:**")
+            st.text(f"Intraday error: {err_intraday}")
+            st.text(f"Summary error: {err_summary}")
+            
+            # Generate mock data
+            mock_ticks = generate_mock_ticks(symbol)
+            mock_summary = generate_mock_summary(symbol)
+            df, latest, pct, vol, spread, vsr, alert = process_ticks(symbol, mock_ticks)
+            
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Price (Mock)", f"PKR {latest:.2f}", f"{pct:.2f}%")
+            col2.metric("Traded Volume (Mock)", f"{vol:,}")
+            col3.metric("High-Low Spread", f"PKR {spread:.2f}")
+            col4.metric("Volume-to-Spread", f"{vsr:,.0f}")
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df['time'], y=df['price'], mode='lines+markers',
+                                     line=dict(color='#00c853' if pct >= 0 else '#ff5252', width=2),
+                                     marker=dict(size=4)))
+            fig.update_layout(template='plotly_dark', xaxis_title='Time', yaxis_title='Price (PKR)', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+            st.info(alert)
 
-# Optional AI report
-if analyze_btn and symbol and OPENAI_API_KEY:
-    with st.spinner("Generating AI brief..."):
-        report = ai_report(symbol, latest, pct, vol, spread, vsr)
-    if report:
-        st.success(f"**AI Brief:** {report}")
+        # Optional AI report
+        if OPENAI_API_KEY:
+            with st.spinner("Generating AI brief..."):
+                report = ai_report(symbol, latest, pct, vol, spread, vsr)
+            if report:
+                st.success(f"**AI Brief:** {report}")
 
 # Top volatile section
 if show_top:
     with st.spinner("Fetching top volatile stocks..."):
-        top_stocks = fetch_top_volatile()
-    if top_stocks:
-        st.subheader("🔥 Top 10 Most Volatile Stocks (Last Session / Live)")
-        df_top = pd.DataFrame(top_stocks)
-        df_top = df_top[['symbol', 'name', 'price', 'changePercent', 'volume', 'high', 'low']]
-        st.dataframe(df_top, use_container_width=True)
-    else:
-        st.warning("Could not load volatile stocks. Market data unavailable.")
+        top_stocks, err_top = fetch_top_volatile()
+        if top_stocks:
+            st.subheader("🔥 Top 10 Most Volatile Stocks (Last Session / Live)")
+            df_top = pd.DataFrame(top_stocks)
+            df_top = df_top[['symbol', 'name', 'price', 'changePercent', 'volume', 'high', 'low']]
+            st.dataframe(df_top, use_container_width=True)
+        else:
+            st.warning(f"Could not load volatile stocks. {err_top}")
