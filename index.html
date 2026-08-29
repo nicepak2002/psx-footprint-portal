@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Institutional Footprint Portal | PSX Analytics</title>
-    
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-    
     <style>
         :root {
             --bg-dark: #0b0e14;
@@ -19,161 +17,36 @@
             --green: #00c853;
             --red: #ff5252;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .header-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .header-card h1 {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-        }
-
-        .header-card .author-tag {
-            background: rgba(37, 99, 235, 0.15);
-            color: #60a5fa;
-            border: 1px solid rgba(37, 99, 235, 0.3);
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 0.8rem;
-            display: inline-block;
-            margin-top: 5px;
-        }
-
-        .search-bar {
-            display: flex;
-            gap: 10px;
-            background: var(--card-bg);
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            width: 100%;
-        }
-
-        .search-bar input {
-            flex: 1;
-            background: #0b0e14;
-            border: 1px solid var(--border-color);
-            padding: 12px 16px;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 1rem;
-            text-transform: uppercase;
-            outline: none;
-        }
-
-        .search-bar input:focus {
-            border-color: var(--accent-blue);
-        }
-
-        .search-bar button {
-            background: var(--accent-blue);
-            color: #fff;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .search-bar button:hover {
-            background: var(--accent-hover);
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-        }
-
-        .metric-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .metric-card .title {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-
-        .metric-card .value {
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-
-        .metric-card .subtext {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .alert-box {
-            border-radius: 12px;
-            padding: 16px 20px;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            border: 1px solid transparent;
-        }
-
-        .alert-info {
-            background: rgba(37, 99, 235, 0.1);
-            border-color: rgba(37, 99, 235, 0.3);
-            color: #93c5fd;
-        }
-
-        .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-        }
-
-        .chart-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 15px;
-            min-height: 400px;
-        }
-
-        footer {
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            padding: 10px 0;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 15px; }
+        .header-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; }
+        .header-card h1 { font-size: 1.5rem; margin-bottom: 8px; }
+        .header-card .author-tag { background: rgba(37,99,235,0.15); color: #60a5fa; border: 1px solid rgba(37,99,235,0.3); border-radius: 20px; padding: 6px 14px; font-size: 0.8rem; display: inline-block; }
+        .search-bar { display: flex; gap: 10px; background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .search-bar input { flex: 1; background: #0b0e14; border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 8px; color: #fff; font-size: 1rem; text-transform: uppercase; outline: none; }
+        .search-bar input:focus { border-color: var(--accent-blue); }
+        .search-bar button { background: var(--accent-blue); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .search-bar button:hover { background: var(--accent-hover); }
+        .search-bar button:disabled { background: #4b5563; cursor: not-allowed; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .metric-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; }
+        .metric-card .title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+        .metric-card .value { font-size: 1.4rem; font-weight: 700; }
+        .metric-card .subtext { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+        .alert-box { border-radius: 12px; padding: 16px 20px; font-size: 0.95rem; line-height: 1.4; border: 1px solid transparent; }
+        .alert-info { background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.3); color: #93c5fd; }
+        .alert-error { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+        .chart-card, .table-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
+        .chart-card { min-height: 400px; }
+        .table-card { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+        tr:hover { background: rgba(255,255,255,0.03); }
+        .positive { color: var(--green); }
+        .negative { color: var(--red); }
+        footer { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 10px 0; }
         @media (max-width: 600px) {
             .search-bar { flex-direction: column; }
             .search-bar button { width: 100%; }
@@ -182,111 +55,141 @@
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="header-card">
         <h1>🛡️ PSX Institutional Footprint</h1>
-        <div class="author-tag">
-            Portal Made by Muhammad Usman Saleem | 0316-8232737
-        </div>
+        <div class="author-tag">Portal Made by Muhammad Usman Saleem | 0316-8232737</div>
     </div>
 
     <div class="search-bar">
-        <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g. PRL, LUCK, OGDC)" value="PRL" onkeydown="if(event.key==='Enter') analyzeStock()">
-        <button onclick="analyzeStock()">Analyze</button>
+        <input type="text" id="tickerInput" placeholder="Enter Ticker or Company Name (e.g. PRL, LUCK)" value="PRL"
+               onkeydown="if(event.key==='Enter') analyzeStock()">
+        <button id="analyzeBtn" onclick="analyzeStock()">Analyze</button>
     </div>
 
     <div id="diagnosticAlert" class="alert-box alert-info">
-        <strong>Status:</strong> Connecting to Cloudflare backend engine...
+        <strong>Status:</strong> Connecting to backend...
     </div>
 
     <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="title">Price</div>
-            <div class="value" id="mPrice">PKR 0.00</div>
-            <div class="subtext" id="mChange">0.00%</div>
-        </div>
-        <div class="metric-card">
-            <div class="title">Traded Volume</div>
-            <div class="value" id="mVolume">0</div>
-            <div class="subtext">Shares Traded</div>
-        </div>
-        <div class="metric-card">
-            <div class="title">High-Low Spread</div>
-            <div class="value" id="mSpread">PKR 0.00</div>
-            <div class="subtext">Day Range Span</div>
-        </div>
-        <div class="metric-card">
-            <div class="title">Volume-to-Spread Ratio</div>
-            <div class="value" id="mVSR">0</div>
-            <div class="subtext">Absorption Measure</div>
-        </div>
+        <div class="metric-card"><div class="title">Price</div><div class="value" id="mPrice">PKR 0.00</div><div class="subtext" id="mChange">0.00%</div></div>
+        <div class="metric-card"><div class="title">Traded Volume</div><div class="value" id="mVolume">0</div><div class="subtext">Shares Traded</div></div>
+        <div class="metric-card"><div class="title">High-Low Spread</div><div class="value" id="mSpread">PKR 0.00</div><div class="subtext">Day Range Span</div></div>
+        <div class="metric-card"><div class="title">Volume-to-Spread Ratio</div><div class="value" id="mVSR">0</div><div class="subtext">Absorption Measure</div></div>
     </div>
 
-    <div class="chart-card">
-        <div id="footprintChart"></div>
+    <div class="chart-card"><div id="footprintChart"></div></div>
+
+    <div class="table-card">
+        <h3 style="margin-bottom: 10px; color: var(--text-muted);">🔥 Top 10 Most Volatile Stocks (Right Now)</h3>
+        <table id="volatileTable">
+            <thead>
+                <tr><th>Symbol</th><th>Company</th><th>Price</th><th>Change %</th><th>Volume</th><th>High</th><th>Low</th></tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <footer>
-        © PSX Institutional Footprint Portal | Proprietary Order Flow Engine
-    </footer>
+    <footer>© PSX Institutional Footprint Portal | Proprietary Order Flow Engine</footer>
 </div>
 
 <script>
+    // ========== CONFIGURATION ==========
+    const WORKER_BASE = 'https://psx-proxy.nice-pak2002-612.workers.dev'; // 👈 CHANGE THIS to your worker URL
+
+    // ========== STATE ==========
+    let isLoading = false;
+    const analyzeBtn = document.getElementById('analyzeBtn');
+
+    // ========== HELPERS ==========
+    function escapeHtml(unsafe) {
+        return unsafe.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+    }
+
+    // ========== FETCH TOP VOLATILE ==========
+    async function fetchTopVolatile() {
+        const tbody = document.querySelector('#volatileTable tbody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>';
+        try {
+            const res = await fetch(`${WORKER_BASE}/api/top-volatile`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.json();
+            if (json.error) throw new Error(json.error);
+            const stocks = json.data || [];
+            if (stocks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No data available</td></tr>';
+                return;
+            }
+            tbody.innerHTML = '';
+            stocks.forEach(s => {
+                const changeClass = s.changePercent >= 0 ? 'positive' : 'negative';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${escapeHtml(s.symbol)}</strong></td>
+                    <td>${escapeHtml(s.name)}</td>
+                    <td>${s.price.toFixed(2)}</td>
+                    <td class="${changeClass}">${s.changePercent >= 0 ? '+' : ''}${s.changePercent.toFixed(2)}%</td>
+                    <td>${s.volume.toLocaleString()}</td>
+                    <td>${s.high.toFixed(2)}</td>
+                    <td>${s.low.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--red);">Error loading volatile stocks: ${escapeHtml(err.message)}</td></tr>`;
+        }
+    }
+
+    // ========== ANALYZE STOCK ==========
     async function analyzeStock() {
+        if (isLoading) return;
+        isLoading = true;
+        analyzeBtn.disabled = true;
+
         const symbol = document.getElementById('tickerInput').value.toUpperCase().trim() || 'PRL';
         const alertBox = document.getElementById('diagnosticAlert');
-        
         alertBox.className = "alert-box alert-info";
-        alertBox.innerHTML = `<strong>Fetching Live PSX Data...</strong> Requesting intraday feed for <strong>${symbol}</strong>.`;
-
-        const workerUrl = `https://psx-proxy.nice-pak2002-612.workers.dev/?symbol=${symbol}`;
+        alertBox.innerHTML = `<strong>Fetching Live PSX Data...</strong> Requesting intraday feed for <strong>${escapeHtml(symbol)}</strong>.`;
 
         try {
-            const res = await fetch(workerUrl);
-            const rawData = await res.json();
+            const res = await fetch(`${WORKER_BASE}/api/stock?symbol=${encodeURIComponent(symbol)}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+            const json = await res.json();
+            if (json.error) throw new Error(json.error);
 
-            if (rawData.error) {
-                throw new Error(rawData.error);
+            const ticksArray = json.data || [];
+            if (!Array.isArray(ticksArray) || ticksArray.length === 0) {
+                throw new Error('No trade ticks available. (Market closed or symbol invalid)');
             }
 
-            // Standardize array detection from PSX payload
-            const ticksArray = Array.isArray(rawData) ? rawData : (rawData.data || []);
+            // Parse and validate
+            const parsedTicks = ticksArray.map((item, idx) => {
+                if (!Array.isArray(item) || item.length < 3) return null;
+                const timestampNum = Number(item[0]);
+                if (isNaN(timestampNum)) return null;
+                // If timestamp is in seconds, convert to ms
+                const ts = timestampNum < 10000000000 ? timestampNum * 1000 : timestampNum;
+                const date = new Date(ts);
+                if (isNaN(date.getTime())) return null;
+                const priceVal = parseFloat(item[1]);
+                const volVal = parseInt(item[2]);
+                if (isNaN(priceVal) || priceVal <= 0 || isNaN(volVal) || volVal < 0) return null;
+                return { timestamp: ts, time: date, timeLabel: date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}), price: priceVal, volume: volVal };
+            }).filter(t => t !== null);
 
-            if (ticksArray && ticksArray.length > 0) {
-                const parsedTicks = ticksArray.map(item => {
-                    // Convert seconds timestamp to milliseconds if needed
-                    const timestamp = item[0] > 10000000000 ? item[0] : item[0] * 1000;
-                    
-                    let priceVal = parseFloat(item[1]);
-                    let volVal = parseInt(item[2]);
+            if (parsedTicks.length === 0) throw new Error('All ticks were malformed');
+            parsedTicks.sort((a,b) => a.timestamp - b.timestamp);
 
-                    // Dynamic column swap detection if volume and price indices flip
-                    if (priceVal > 500 && volVal < 500) {
-                        const temp = priceVal;
-                        priceVal = volVal;
-                        volVal = temp;
-                    }
-
-                    return {
-                        time: new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        price: priceVal,
-                        volume: isNaN(volVal) ? 0 : volVal
-                    };
-                }).filter(t => !isNaN(t.price) && t.price > 0);
-
-                if (parsedTicks.length === 0) {
-                    throw new Error("Received empty or malformed price data.");
-                }
-
-                processFootprintAnalysis(symbol, parsedTicks);
-            } else {
-                throw new Error("No trade ticks available. (Market closed or symbol invalid)");
-            }
+            processFootprintAnalysis(symbol, parsedTicks);
         } catch (e) {
             console.error(e);
             alertBox.className = "alert-box alert-error";
-            alertBox.innerHTML = `<strong>🔴 CONNECTION ERROR:</strong> Could not retrieve data for <strong>${symbol}</strong>: ${e.message}`;
+            alertBox.innerHTML = `<strong>🔴 CONNECTION ERROR:</strong> ${escapeHtml(e.message)}`;
+        } finally {
+            isLoading = false;
+            analyzeBtn.disabled = false;
         }
     }
 
@@ -294,14 +197,12 @@
         const prices = ticks.map(t => t.price);
         const volumes = ticks.map(t => t.volume);
         const times = ticks.map(t => t.time);
-
         const latestPrice = prices[prices.length - 1];
         const openPrice = prices[0];
         const maxPrice = Math.max(...prices);
         const minPrice = Math.min(...prices);
         const pctChange = ((latestPrice - openPrice) / openPrice) * 100;
-        
-        const totalVol = volumes.reduce((a, b) => a + b, 0);
+        const totalVol = volumes.reduce((a,b) => a+b, 0);
         const spread = Math.max(0.01, maxPrice - minPrice);
         const vsr = totalVol / spread;
 
@@ -309,23 +210,21 @@
         const changeElem = document.getElementById('mChange');
         changeElem.innerText = `${pctChange >= 0 ? '+' : ''}${pctChange.toFixed(2)}%`;
         changeElem.style.color = pctChange >= 0 ? 'var(--green)' : 'var(--red)';
-
         document.getElementById('mVolume').innerText = totalVol.toLocaleString();
         document.getElementById('mSpread').innerText = `PKR ${spread.toFixed(2)}`;
         document.getElementById('mVSR').innerText = Math.round(vsr).toLocaleString();
 
         const alertBox = document.getElementById('diagnosticAlert');
         const volumeThreshold = latestPrice > 200 ? 250000 : 1000000;
-
         if (vsr > volumeThreshold && spread < (latestPrice * 0.012)) {
             alertBox.className = "alert-box alert-error";
-            alertBox.innerHTML = `<strong>🔴 INSTITUTIONAL ICEBERG FOUND (${symbol}):</strong> Heavy volume (${totalVol.toLocaleString()} shares) absorbed within PKR ${spread.toFixed(2)} range.`;
+            alertBox.innerHTML = `<strong>🔴 INSTITUTIONAL ICEBERG FOUND (${escapeHtml(symbol)}):</strong> Heavy volume (${totalVol.toLocaleString()} shares) absorbed within PKR ${spread.toFixed(2)} range.`;
         } else if (pctChange > 0.8) {
             alertBox.className = "alert-box alert-info";
-            alertBox.innerHTML = `<strong>🟢 AGGRESSIVE BUYING (${symbol}):</strong> Positive momentum backed by order flow.`;
+            alertBox.innerHTML = `<strong>🟢 AGGRESSIVE BUYING (${escapeHtml(symbol)}):</strong> Positive momentum backed by order flow.`;
         } else {
             alertBox.className = "alert-box alert-info";
-            alertBox.innerHTML = `<strong>🟢 LIVE DATA CONNECTED (${symbol}):</strong> Intraday trade tick stream active.`;
+            alertBox.innerHTML = `<strong>🟢 LIVE DATA CONNECTED (${escapeHtml(symbol)}):</strong> Intraday trade tick stream active.`;
         }
 
         const trace = {
@@ -337,22 +236,23 @@
             line: { color: pctChange >= 0 ? '#00c853' : '#ff5252', width: 2 },
             marker: { size: 4 }
         };
-
         const layout = {
-            title: { text: `${symbol} Intraday Footprint (PSX LIVE)`, font: { color: '#fff', size: 14 } },
+            title: { text: `${escapeHtml(symbol)} Intraday Footprint (PSX LIVE)`, font: { color: '#fff', size: 14 } },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
             font: { color: '#8a94a6' },
-            xaxis: { gridcolor: '#232936', showgrid: true },
+            xaxis: { gridcolor: '#232936', showgrid: true, type: 'date' },
             yaxis: { gridcolor: '#232936', title: 'Price (PKR)' },
             margin: { t: 40, r: 15, l: 45, b: 40 }
         };
-
         Plotly.newPlot('footprintChart', [trace], layout, {responsive: true});
     }
 
-    window.onload = analyzeStock;
+    // Initial load
+    window.onload = () => {
+        analyzeStock();
+        fetchTopVolatile();
+    };
 </script>
-
 </body>
 </html>
