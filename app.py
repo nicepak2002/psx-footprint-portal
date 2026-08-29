@@ -1,404 +1,208 @@
-import streamlit as st
+import asyncio
+import json
+import threading
+import time
 import pandas as pd
 import plotly.graph_objects as go
-import requests
-import json
-from datetime import datetime
-import math
+import streamlit as st
+import websockets
 
-# ------------------------------
-# Configuration
-# ------------------------------
-st.set_page_config(page_title="PSX Institutional Footprint", layout="wide")
+# -------------------------------------------------------------
+# CONFIGURATION
+# -------------------------------------------------------------
+BEARER_TOKEN = "YOUR_BEARER_TOKEN"  # Replace with your Capital Stake Token
+WEBSOCKET_URL = "wss://csapis.com/2.0/market/feed/l2"
 
-# Optional OpenAI API key (leave empty to disable AI report)
-OPENAI_API_KEY = ""
+# Global in-memory data store for live ticks
+if "market_data" not in st.session_state:
+    st.session_state["market_data"] = {}
 
-# Public CORS proxies (server-side, no CORS issues in Streamlit)
-PROXIES = [
-    lambda url: f"https://corsproxy.io/?url={requests.utils.quote(url, safe='')}",
-    lambda url: f"https://api.allorigins.win/raw?url={requests.utils.quote(url, safe='')}",
-    lambda url: f"https://api.codetabs.com/v1/proxy?quest={requests.utils.quote(url, safe='')}",
-]
+# -------------------------------------------------------------
+# BACKGROUND WEBSOCKET THREAD
+# -------------------------------------------------------------
+def run_websocket_listener():
+    """Asynchronous WebSocket client running in a background thread."""
 
-# ------------------------------
-# Built-in fallback list of KSE-100 companies (symbol, name)
-# ------------------------------
-KSE100_FALLBACK = [
-    {"symbol": "PRL", "companyName": "Pakistan Refinery Ltd"},
-    {"symbol": "LUCK", "companyName": "Lucky Cement"},
-    {"symbol": "OGDC", "companyName": "Oil & Gas Dev Co"},
-    {"symbol": "PPL", "companyName": "Pakistan Petroleum"},
-    {"symbol": "ENGRO", "companyName": "Engro Corp"},
-    {"symbol": "HBL", "companyName": "Habib Bank Ltd"},
-    {"symbol": "UBL", "companyName": "United Bank Ltd"},
-    {"symbol": "MCB", "companyName": "MCB Bank Ltd"},
-    {"symbol": "SEARL", "companyName": "The Searle Company"},
-    {"symbol": "TRG", "companyName": "TRG Pakistan"},
-    # ... (add more if desired; the list above is sufficient for demo)
-]
+    async def listen():
+        headers = {"Authorization": f"Bearer {BEARER_TOKEN}"}
+        while True:
+            try:
+                async with websockets.connect(
+                    WEBSOCKET_URL, extra_headers=headers
+                ) as ws:
+                    print("✅ Connected to Capital Stake Live Feed (Python)")
+                    while True:
+                        message = await ws.recv()
+                        data = json.loads(message)
 
-# ------------------------------
-# Helper: fetch JSON from PSX with proxies
-# ------------------------------
-def fetch_psx_data(url):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Referer": "https://dps.psx.com.pk/",
-    }
-    # Try direct first
-    try:
-        r = requests.get(url, headers=headers, timeout=10)
-        if r.status_code == 200:
-            return r.json(), "direct"
-    except Exception as e:
-        pass
+                        msg_type = data.get("type")
+                        payload = data.get("data", {})
+                        symbol = payload.get("s")
 
-    # Try proxies
-    for proxy in PROXIES:
-        try:
-            proxied_url = proxy(url)
-            r = requests.get(proxied_url, headers=headers, timeout=15)
-            if r.status_code == 200:
-                data = r.json()
-                if 'contents' in data:
-                    return json.loads(data['contents']), "proxy"
-                return data, "proxy"
-        except Exception as e:
-            continue
-    return None, None
+                        if not symbol:
+                            continue
 
-# ------------------------------
-# Fetch list of all companies (PSX market-watch)
-# ------------------------------
-@st.cache_data(ttl=600)
-def fetch_company_list():
-    url = "https://dps.psx.com.pk/market-watch"
-    raw, source = fetch_psx_data(url)
-    if raw:
-        stocks = raw if isinstance(raw, list) else raw.get('data', [])
-        if stocks:
-            df = pd.DataFrame(stocks)
-            if 'symbol' in df.columns:
-                if 'companyName' in df.columns:
-                    df = df[['symbol', 'companyName']]
-                elif 'name' in df.columns:
-                    df = df.rename(columns={'name': 'companyName'})
-                else:
-                    df['companyName'] = df['symbol']
-                df = df.dropna().drop_duplicates(subset='symbol')
-                df = df[df['symbol'].str.match(r'^[A-Za-z0-9]+$', na=False)]
-                if not df.empty:
-                    return df
-    # Fallback
-    return pd.DataFrame(KSE100_FALLBACK)
+                        symbol = symbol.upper()
 
-# ------------------------------
-# Fetch intraday ticks (order-by-order)
-# ------------------------------
-def fetch_intraday(symbol):
-    url = f"https://dps.psx.com.pk/timeseries/eq/{symbol}"
-    raw, source = fetch_psx_data(url)
-    if not raw or 'data' not in raw:
-        return None, f"No intraday data (source: {source})"
-    ticks = []
-    for item in raw['data']:
-        try:
-            ts = datetime.strptime(item['DateTime'], "%Y-%m-%dT%H:%M:%S")
-            ts_ms = int(ts.timestamp() * 1000)
-            price = float(item['Price'])
-            volume = int(item['Volume'])
-            ticks.append([ts_ms, price, volume])
-        except:
-            continue
-    if not ticks:
-        return None, "Intraday data format error"
-    ticks.sort(key=lambda x: x[0])
-    return ticks, None
+                        if symbol not in st.session_state["market_data"]:
+                            st.session_state["market_data"][symbol] = {
+                                "price": 0.0,
+                                "open": 0.0,
+                                "high": 0.0,
+                                "low": float("inf"),
+                                "volume": 0,
+                                "ticks": [],
+                            }
 
-# ------------------------------
-# Fetch daily summary from market-watch
-# ------------------------------
-def fetch_daily_summary(symbol):
-    url = "https://dps.psx.com.pk/market-watch"
-    raw, source = fetch_psx_data(url)
-    if not raw:
-        return None, f"No market watch data (source: {source})"
-    stocks = raw if isinstance(raw, list) else raw.get('data', [])
-    for s in stocks:
-        if s.get('symbol', '').upper() == symbol.upper():
-            return {
-                'symbol': s.get('symbol'),
-                'name': s.get('companyName', s.get('symbol')),
-                'open': s.get('open', 0),
-                'high': s.get('high', 0),
-                'low': s.get('low', 0),
-                'price': s.get('currentPrice', s.get('close', 0)),
-                'changePercent': s.get('percentChange', 0),
-                'volume': s.get('volume', 0),
-                'close': s.get('close', s.get('currentPrice', 0)),
-            }, None
-    return None, f"Symbol {symbol} not found in market watch"
+                        state = st.session_state["market_data"][symbol]
 
-# ------------------------------
-# Fetch top volatile stocks
-# ------------------------------
-def fetch_top_volatile():
-    url = "https://dps.psx.com.pk/market-watch"
-    raw, source = fetch_psx_data(url)
-    if not raw:
-        return None, f"No market watch data (source: {source})"
-    stocks = raw if isinstance(raw, list) else raw.get('data', [])
-    if not stocks:
-        return None, "Empty market watch"
-    scored = []
-    for s in stocks:
-        try:
-            price = float(s.get('currentPrice', s.get('close', 0)))
-            high = float(s.get('high', 0))
-            low = float(s.get('low', 0))
-            volume = int(s.get('volume', 0))
-            if price > 0 and volume > 0 and high >= low:
-                score = ((high - low) / price) * math.sqrt(volume / 1000)
-                scored.append({
-                    'symbol': s.get('symbol', ''),
-                    'name': s.get('companyName', s.get('symbol', '')),
-                    'price': price,
-                    'changePercent': s.get('percentChange', 0),
-                    'volume': volume,
-                    'high': high,
-                    'low': low,
-                    'score': score
-                })
-        except:
-            continue
-    scored.sort(key=lambda x: x['score'], reverse=True)
-    return scored[:10], None
+                        # Process Snapshot Tick
+                        if msg_type == "tick" and payload.get("c"):
+                            state["price"] = float(payload["c"])
+                            if not state["open"] and payload.get("o"):
+                                state["open"] = float(payload["o"])
+                            if payload.get("h"):
+                                state["high"] = max(
+                                    state["high"], float(payload["h"])
+                                )
+                            if payload.get("l"):
+                                state["low"] = min(
+                                    state["low"], float(payload["l"])
+                                )
+                            if payload.get("v"):
+                                state["volume"] = int(payload["v"])
 
-# ------------------------------
-# Process intraday ticks
-# ------------------------------
-def process_ticks(symbol, ticks):
-    df = pd.DataFrame(ticks, columns=['timestamp', 'price', 'volume'])
-    df['time'] = pd.to_datetime(df['timestamp'], unit='ms')
-    latest_price = df['price'].iloc[-1]
-    open_price = df['price'].iloc[0]
-    high = df['price'].max()
-    low = df['price'].min()
-    total_vol = df['volume'].sum()
-    spread = max(0.01, high - low)
-    vsr = total_vol / spread
-    pct_change = (latest_price - open_price) / open_price * 100
+                        # Process Execution / Trade Tick
+                        elif msg_type in ["tex", "tor"]:
+                            price = float(payload.get("x", 0))
+                            vol = int(payload.get("v", 0))
 
-    volume_threshold = 250000 if latest_price > 200 else 1000000
-    if vsr > volume_threshold and spread < (latest_price * 0.012):
-        alert = f"🔴 INSTITUTIONAL ICEBERG FOUND in {symbol}: heavy volume absorbed in tight range."
-    elif pct_change > 0.8:
-        alert = f"🟢 AGGRESSIVE BUYING in {symbol}: positive momentum."
-    else:
-        alert = f"🟢 LIVE DATA CONNECTED for {symbol}."
-    return df, latest_price, pct_change, total_vol, spread, vsr, alert
+                            if price > 0:
+                                state["price"] = price
+                                if state["open"] == 0:
+                                    state["open"] = price
+                                state["high"] = max(state["high"], price)
+                                state["low"] = min(state["low"], price)
+                                state["volume"] += vol
 
-# ------------------------------
-# Process daily summary (closed market)
-# ------------------------------
-def process_daily(summary):
-    open_price = summary['open']
-    close_price = summary['price']
-    high = summary['high']
-    low = summary['low']
-    volume = summary['volume']
-    spread = max(0.01, high - low)
-    vsr = volume / spread if spread > 0 else 0
-    pct_change = summary['changePercent']
-    latest = close_price
-    return latest, pct_change, volume, spread, vsr, summary['symbol'], summary['name']
+                                # Append to tick stream history (rolling window of 300)
+                                state["ticks"].append(
+                                    {
+                                        "time": time.strftime("%H:%M:%S"),
+                                        "price": price,
+                                        "volume": vol,
+                                    }
+                                )
+                                if len(state["ticks"]) > 300:
+                                    state["ticks"].pop(0)
 
-# ------------------------------
-# Mock data generators
-# ------------------------------
-def generate_mock_ticks(symbol):
-    now = datetime.now()
-    ticks = []
-    price = 50 + (hash(symbol) % 50)  # deterministic starting price
-    for i in range(60):
-        time = now - pd.Timedelta(minutes=60-i)
-        price += (0.5 - (i % 5) * 0.2)  # some pattern
-        volume = 1000 + (i * 100) % 5000
-        ticks.append([int(time.timestamp() * 1000), round(price, 2), volume])
-    return ticks
+            except Exception as e:
+                print(f"WS Error: {e}. Reconnecting in 5s...")
+                await asyncio.sleep(5)
 
-def generate_mock_summary(symbol):
-    return {
-        'symbol': symbol,
-        'name': symbol,
-        'open': 50,
-        'high': 55,
-        'low': 48,
-        'price': 53,
-        'changePercent': 6.0,
-        'volume': 1500000,
-        'close': 53,
-    }
+    asyncio.run(listen())
 
-# ------------------------------
-# Optional AI report
-# ------------------------------
-def ai_report(symbol, latest, pct, vol, spread, vsr):
-    if not OPENAI_API_KEY:
-        return None
-    prompt = f"Based on PSX data for {symbol}: price={latest:.2f}, change={pct:.2f}%, volume={vol}, spread={spread:.2f}, VSR={vsr:.0f}. Is institutional accumulation likely? Answer in one line."
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
-    data = {"model": "gpt-3.5-turbo", "messages": [{"role": "user", "content": prompt}], "max_tokens": 60, "temperature": 0.2}
-    try:
-        r = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=data, timeout=15)
-        if r.status_code == 200:
-            return r.json()["choices"][0]["message"]["content"].strip()
-        else:
-            return f"AI error: {r.status_code}"
-    except Exception as e:
-        return f"AI failed: {str(e)}"
 
-# ------------------------------
-# Streamlit UI
-# ------------------------------
+# Start background thread once when Streamlit app initializes
+@st.cache_resource
+def start_background_feed():
+    thread = threading.Thread(target=run_websocket_listener, daemon=True)
+    thread.start()
+
+
+start_background_feed()
+
+# -------------------------------------------------------------
+# STREAMLIT UI LAYOUT
+# -------------------------------------------------------------
+st.set_page_config(
+    page_title="PSX Footprint Portal", page_icon="🛡️", layout="wide"
+)
+
 st.title("🛡️ PSX Institutional Footprint")
-st.markdown("**Order‑by‑order intraday data + daily overview from PSX Data Portal**")
+st.caption("Portal Made by Muhammad Usman Saleem | 0316-8232737")
 
-# Main area controls (always visible)
-col_search1, col_search2 = st.columns([3, 1])
-with col_search1:
-    # Load company list
-    company_df = fetch_company_list()
-    if company_df.empty:
-        st.error("Could not load company list. Falling back to manual ticker entry.")
-        symbol = st.text_input("Enter Ticker Symbol", value="PRL").upper().strip()
-    else:
-        search_term = st.text_input("Search by company name or ticker", value="")
-        if search_term:
-            filtered = company_df[
-                company_df['symbol'].str.contains(search_term, case=False, na=False) |
-                company_df['companyName'].str.contains(search_term, case=False, na=False)
-            ]
+# Search / Ticker Selection
+symbol_input = (
+    st.text_input("Enter Stock Ticker:", value="PRL").strip().upper()
+)
+
+# Placeholder container for real-time dynamic rerendering
+placeholder = st.empty()
+
+# Real-time auto-refresh loop (Updates every 1 second)
+while True:
+    with placeholder.container():
+        data = st.session_state["market_data"].get(symbol_input)
+
+        if not data or not data["ticks"]:
+            st.info(
+                f"Connecting & waiting for live trade execution ticks for **{symbol_input}**..."
+            )
         else:
-            filtered = company_df
-        if filtered.empty:
-            st.warning("No companies match your search.")
-            symbol = st.text_input("Enter Ticker Manually", value="PRL").upper().strip()
-        else:
-            filtered['display'] = filtered['symbol'] + " - " + filtered['companyName']
-            selected_display = st.selectbox("Select Company", filtered['display'])
-            symbol = selected_display.split(" - ")[0].strip()
-with col_search2:
-    st.write("")  # spacer
-    st.write("")
-    analyze_btn = st.button("Analyze", use_container_width=True)
+            latest_price = data["price"]
+            open_price = data["open"] if data["open"] > 0 else latest_price
+            pct_change = (
+                ((latest_price - open_price) / open_price) * 100
+                if open_price > 0
+                else 0.0
+            )
 
-# Top volatile button
-show_top = st.button("🔄 Refresh Top 10 Volatile Stocks", use_container_width=True)
+            high_p = data["high"]
+            low_p = (
+                data["low"] if data["low"] != float("inf") else latest_price
+            )
+            spread = max(0.01, high_p - low_p)
+            total_vol = data["volume"]
+            vsr = int(total_vol / spread) if spread > 0 else 0
 
-# Placeholder for results
-result_placeholder = st.container()
-
-# Analysis logic
-if analyze_btn:
-    with st.spinner(f"Fetching data for {symbol}..."):
-        ticks, err_intraday = fetch_intraday(symbol)
-        daily_summary, err_summary = None, None
-        if not ticks:
-            daily_summary, err_summary = fetch_daily_summary(symbol)
-    
-    with result_placeholder:
-        if ticks:
-            df, latest, pct, vol, spread, vsr, alert = process_ticks(symbol, ticks)
-            st.success("Live intraday order-by-order data")
-            
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Price", f"PKR {latest:.2f}", f"{pct:.2f}%")
-            col2.metric("Traded Volume", f"{vol:,}")
-            col3.metric("High-Low Spread", f"PKR {spread:.2f}")
-            col4.metric("Volume-to-Spread", f"{vsr:,.0f}")
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=df['time'], y=df['price'], mode='lines+markers',
-                                     line=dict(color='#00c853' if pct >= 0 else '#ff5252', width=2),
-                                     marker=dict(size=4)))
-            fig.update_layout(template='plotly_dark', xaxis_title='Time', yaxis_title='Price (PKR)', height=400)
-            st.plotly_chart(fig, use_container_width=True)
-            st.info(alert)
-        elif daily_summary:
-            latest, pct, vol, spread, vsr, sym, name = process_daily(daily_summary)
-            st.warning(f"Market is closed or intraday data unavailable. Showing last completed session for **{name} ({sym})**.")
-            
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Last Price", f"PKR {latest:.2f}", f"{pct:.2f}%")
-            col2.metric("Volume", f"{vol:,}")
-            col3.metric("Day Range", f"PKR {daily_summary['low']:.2f} - {daily_summary['high']:.2f}")
-            col4.metric("Volume-to-Spread", f"{vsr:,.0f}")
-            
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=pct,
-                title={'text': "Change %"},
-                gauge={
-                    'axis': {'range': [-10, 10]},
-                    'bar': {'color': "green" if pct >= 0 else "red"},
-                    'steps': [
-                        {'range': [-10, 0], 'color': "lightcoral"},
-                        {'range': [0, 10], 'color': "lightgreen"}
-                    ]
-                }
-            ))
-            fig.update_layout(template='plotly_dark', height=300)
-            st.plotly_chart(fig, use_container_width=True)
-            
-            volume_threshold = 250000 if latest > 200 else 1000000
-            if vsr > volume_threshold and spread < (latest * 0.012):
-                st.error(f"🔴 INSTITUTIONAL ICEBERG FOUND in {sym}: heavy volume absorbed in tight range.")
+            # Alert Box Engine
+            volume_threshold = 250000 if latest_price > 200 else 1000000
+            if vsr > volume_threshold and spread < (latest_price * 0.012):
+                st.error(
+                    f"🔴 **INSTITUTIONAL ICEBERG FOUND ({symbol_input}):** Heavy volume ({total_vol:,} shares) absorbed within PKR {spread:.2f} range."
+                )
             else:
-                st.info(f"🟢 No abnormal absorption detected for {sym} in the last session.")
-        else:
-            # Both real data attempts failed; use mock data and show debug info
-            st.error("❌ Could not fetch live PSX data. Displaying mock data for demonstration.")
-            st.markdown("**Debug Info:**")
-            st.text(f"Intraday error: {err_intraday}")
-            st.text(f"Summary error: {err_summary}")
-            
-            # Generate mock data
-            mock_ticks = generate_mock_ticks(symbol)
-            mock_summary = generate_mock_summary(symbol)
-            df, latest, pct, vol, spread, vsr, alert = process_ticks(symbol, mock_ticks)
-            
+                st.success(
+                    f"🟢 **LIVE STREAM ACTIVE ({symbol_input}):** Real-time order flow updating."
+                )
+
+            # Top Metrics Cards
             col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Price (Mock)", f"PKR {latest:.2f}", f"{pct:.2f}%")
-            col2.metric("Traded Volume (Mock)", f"{vol:,}")
+            col1.metric(
+                "Price",
+                f"PKR {latest_price:.2f}",
+                delta=f"{pct_change:+.2f}%",
+            )
+            col2.metric("Traded Volume", f"{total_vol:,}")
             col3.metric("High-Low Spread", f"PKR {spread:.2f}")
-            col4.metric("Volume-to-Spread", f"{vsr:,.0f}")
-            
+            col4.metric("Volume-to-Spread Ratio", f"{vsr:,}")
+
+            # Plotly Chart
+            df_ticks = pd.DataFrame(data["ticks"])
+            line_color = "#00c853" if pct_change >= 0 else "#ff5252"
+
             fig = go.Figure()
-            fig.add_trace(go.Scatter(x=df['time'], y=df['price'], mode='lines+markers',
-                                     line=dict(color='#00c853' if pct >= 0 else '#ff5252', width=2),
-                                     marker=dict(size=4)))
-            fig.update_layout(template='plotly_dark', xaxis_title='Time', yaxis_title='Price (PKR)', height=400)
+            fig.add_trace(
+                go.Scatter(
+                    x=df_ticks["time"],
+                    y=df_ticks["price"],
+                    mode="lines+markers",
+                    name="Price",
+                    line=dict(color=line_color, width=2),
+                )
+            )
+
+            fig.update_layout(
+                title=f"{symbol_input} Real-Time Tick Stream",
+                xaxis_title="Time",
+                yaxis_title="Price (PKR)",
+                template="plotly_dark",
+                height=450,
+                margin=dict(l=20, r=20, t=40, b=20),
+            )
+
             st.plotly_chart(fig, use_container_width=True)
-            st.info(alert)
 
-        # Optional AI report
-        if OPENAI_API_KEY:
-            with st.spinner("Generating AI brief..."):
-                report = ai_report(symbol, latest, pct, vol, spread, vsr)
-            if report:
-                st.success(f"**AI Brief:** {report}")
-
-# Top volatile section
-if show_top:
-    with st.spinner("Fetching top volatile stocks..."):
-        top_stocks, err_top = fetch_top_volatile()
-        if top_stocks:
-            st.subheader("🔥 Top 10 Most Volatile Stocks (Last Session / Live)")
-            df_top = pd.DataFrame(top_stocks)
-            df_top = df_top[['symbol', 'name', 'price', 'changePercent', 'volume', 'high', 'low']]
-            st.dataframe(df_top, use_container_width=True)
-        else:
-            st.warning(f"Could not load volatile stocks. {err_top}")
+    # Sleep 1 second before refreshing UI frame
+    time.sleep(1)
